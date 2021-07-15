@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { AngularFireAuth } from '@angular/fire/auth';
 import { MatSnackBar, MatSnackBarHorizontalPosition, MatSnackBarVerticalPosition } from '@angular/material/snack-bar';
 
@@ -20,7 +21,8 @@ export class LoginComponent implements OnInit {
 
   constructor(
     private authSrv: AngularFireAuth,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private router: Router
   ) { }
 
   ngOnInit(): void {
@@ -31,10 +33,10 @@ export class LoginComponent implements OnInit {
        //TODO Mostrar si el usuario esta con el email verificado
       //console.log(response);
       const mensaje = (response.user?.emailVerified) ? "El email del usuario esta verificado" : "Se envío un mensaje a su correo para la verificación";
-      if (response.user?.emailVerified == false){
-        response.user.sendEmailVerification();
-      }
+      
       this.openSnackBar(mensaje, "Inicio de Sesión", (!response.user?.emailVerified)?this.codigoMensajeInformacion : this.codigoMensajeExito);
+
+      (!response.user?.emailVerified) ? response.user?.sendEmailVerification() : this.navigarHome();
     }).catch(err =>{
       //TODO Monstrar un mensaje de error en el html cuando este llege cuando sea Fallido.
       //console.log(err);
@@ -49,6 +51,7 @@ export class LoginComponent implements OnInit {
       verticalPosition: this.posicionVertical,
       panelClass: this.estilo(codigo)
     });
+    
   }
 
   estilo(codigo: number){
@@ -57,5 +60,9 @@ export class LoginComponent implements OnInit {
       case this.codigoMensajeInformacion: return 'estilo-mensaje-informacion';
       default: return 'estilo-mensaje-exito';
     }
+  }
+
+  navigarHome() {
+    this.router.navigate(['home'])
   }
 }
