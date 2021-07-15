@@ -14,7 +14,7 @@ export class LoginComponent implements OnInit {
 
   posicionHorizontal: MatSnackBarHorizontalPosition = 'right';
   posicionVertical: MatSnackBarVerticalPosition = 'top';
-  duracionSegundos = 5;
+  duracionSegundos = 4;
   codigoMensajeError = 0;
   codigoMensajeInformacion = 1;
   codigoMensajeExito = 2;
