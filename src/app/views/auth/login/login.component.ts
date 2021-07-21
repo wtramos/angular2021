@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { AngularFireAuth } from '@angular/fire/auth';
 import { MatSnackBar, MatSnackBarHorizontalPosition, MatSnackBarVerticalPosition } from '@angular/material/snack-bar';
+import { AuthService } from 'src/app/services/auth.service';
 
 @Component({
   selector: 'app-login',
@@ -20,15 +20,25 @@ export class LoginComponent implements OnInit {
   codigoMensajeExito = 2;
 
   constructor(
-    private authSrv: AngularFireAuth,
     private snackBar: MatSnackBar,
-    private router: Router
+    private router: Router,
+    private authService: AuthService
   ) { }
 
   ngOnInit(): void {
   }
 
-  login(){
+  public async login(){
+    const response = await this.authService.signIn(this.email, this.password).then(response => {
+    if (response.success){
+      console.log(response);
+      this.router.navigate(['home']);
+    }}).catch(error => {
+      console.log(error);
+    });
+  }
+/*
+  login2(){
     this.authSrv.signInWithEmailAndPassword(this.email, this.password).then(response =>{
        //TODO Mostrar si el usuario esta con el email verificado
       //console.log(response);
@@ -63,6 +73,7 @@ export class LoginComponent implements OnInit {
   }
 
   navigarHome() {
-    this.router.navigate(['home'])
+    //this.router.navigate(['home'])
   }
+  */
 }
