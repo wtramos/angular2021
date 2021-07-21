@@ -22,8 +22,8 @@ export class HomeComponent implements OnInit {
   }
 
 
-  //TODO: Llenar 5 productos en firebase.
-  //TODO: Mostrar el listado de productos en html.
+  //TODO: Agregar registros en el FireBase en la colección de products.
+  //TODO: Mostrar la data de la colección products en la página web.
   ngOnInit(): void {
     this.getProducts();
   }
