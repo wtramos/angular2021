@@ -1,5 +1,10 @@
 import { Injectable } from '@angular/core';
 import {AngularFirestore } from '@angular/fire/firestore';
+import { Product } from '../models/Product.model';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { NetWorkResponse } from '../models/Network.model';
+import { NetWorkResponseError } from "../models/Network.model";
 
 @Injectable({
   providedIn: 'root'
@@ -10,12 +15,12 @@ export class ProductService {
     private firestoreService: AngularFirestore
   ) { }
 
-  public async getProducts() : Promise<any>{
+  public async getProducts() : Promise<Product[]>{
     try {
-      const products = await this.firestoreService.collection("products").get().toPromise().then(
+      const products: Product[] = await this.firestoreService.collection<Product>("products").get().toPromise().then(
         querySnapshot => {
           return querySnapshot.docs.map(doc => {
-            const data = doc.data() as any;
+            const data = doc.data();
             return {
               _id: doc.id,
               ...data
@@ -25,7 +30,54 @@ export class ProductService {
       );
       return products;
     } catch (error) {
-     Promise.reject(error);
+     return Promise.reject(error);
+    }
+  }
+
+  public getProductsRealTime$(): Observable<Product[]> {
+    const products = this.firestoreService.collection<Product>('products').valueChanges().pipe(
+      map(product => {
+        return product;
+      })
+    );
+    return products;
+  }
+
+  public async createProduct(product: Product): Promise<any>{
+    try {
+      const data = await this.firestoreService.collection("products").add(product);
+      return data;
+    } catch (error) {
+      return Promise.reject(error);
+    }
+  }
+
+  public async getProductByBrand(brand: string): Promise<Product[]>{
+    try {
+      const productByBrand = this.firestoreService.collection<Product>('products', query => query.where("brand", "==", brand)).get().toPromise().then( (querySnapshot) => {
+        return querySnapshot.docs.map(doc => {
+          const data: Product = doc.data();
+          return {
+            ...data,
+            _id: doc.id
+          }
+        });
+      });
+      return productByBrand;
+    } catch (error) {
+      return Promise.reject(error);
+    }
+  }
+
+  public async updateProduct(product: Product): Promise<NetWorkResponse | NetWorkResponseError> {
+    try {
+      const { name, description, price, offert, image, brand } = product;
+      await this.firestoreService.collection('products').doc(product._id).update({
+        name, description, price, offert, image, brand
+      });
+      return { success: true, response: product }
+    } catch (error) {
+      return { success: false, error }
     }
   }
 }
