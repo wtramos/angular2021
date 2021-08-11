@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { MatSnackBar, MatSnackBarHorizontalPosition, MatSnackBarVerticalPosition } from '@angular/material/snack-bar';
+import { MatDialog } from '@angular/material/dialog';
 import { AuthService } from 'src/app/services/auth.service';
+import { LoaderComponent } from 'src/app/global/components/loader/loader.component';
 
 @Component({
   selector: 'app-login',
@@ -12,68 +13,30 @@ export class LoginComponent implements OnInit {
   email: any;
   password: any;
 
-  posicionHorizontal: MatSnackBarHorizontalPosition = 'right';
-  posicionVertical: MatSnackBarVerticalPosition = 'top';
-  duracionSegundos = 4;
-  codigoMensajeError = 0;
-  codigoMensajeInformacion = 1;
-  codigoMensajeExito = 2;
-
   constructor(
-    private snackBar: MatSnackBar,
+    private dialog: MatDialog,
     private router: Router,
     private authService: AuthService
   ) { }
 
   ngOnInit(): void {
+    this.authService.getCurrentUser().then(el => {
+      if (el){
+        this.router.navigate(['home']);
+      }
+    });
   }
 
-  public async login(){
-    const response = await this.authService.signIn(this.email, this.password).then(response => {
-    if (response.success){
+  public async login() {
+    this.dialog.open(LoaderComponent);
+    setTimeout(async () => {
+      const response = await this.authService.signIn(this.email, this.password);
+      this.dialog.closeAll();
+      if (response.success) {
+        this.router.navigate(['home']);
+        return;
+      }
       console.log(response);
-      this.router.navigate(['home']);
-    }}).catch(error => {
-      console.log(error);
-    });
+    }, 13000);
   }
-/*
-  login2(){
-    this.authSrv.signInWithEmailAndPassword(this.email, this.password).then(response =>{
-       //TODO Mostrar si el usuario esta con el email verificado
-      //console.log(response);
-      const mensaje = (response.user?.emailVerified) ? "El email del usuario esta verificado" : "Se envío un mensaje a su correo para la verificación";
-      
-      this.openSnackBar(mensaje, "Inicio de Sesión", (!response.user?.emailVerified)?this.codigoMensajeInformacion : this.codigoMensajeExito);
-
-      (!response.user?.emailVerified) ? response.user?.sendEmailVerification() : this.navigarHome();
-    }).catch(err =>{
-      //TODO Monstrar un mensaje de error en el html cuando este llege cuando sea Fallido.
-      //console.log(err);
-      this.openSnackBar(err.message, "Inicio de Sesión", this.codigoMensajeError);
-    });
-  }
-
-  openSnackBar(message: string, action: string, codigo: number) {
-    this.snackBar.open(message, action, {
-      duration: this.duracionSegundos * 1000,
-      horizontalPosition: this.posicionHorizontal,
-      verticalPosition: this.posicionVertical,
-      panelClass: this.estilo(codigo)
-    });
-    
-  }
-
-  estilo(codigo: number){
-    switch(codigo) { 
-      case this.codigoMensajeError: return 'estilo-mensaje-error';
-      case this.codigoMensajeInformacion: return 'estilo-mensaje-informacion';
-      default: return 'estilo-mensaje-exito';
-    }
-  }
-
-  navigarHome() {
-    //this.router.navigate(['home'])
-  }
-  */
 }

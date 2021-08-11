@@ -43,12 +43,12 @@ export class ProductService {
     return products;
   }
 
-  public async createProduct(product: Product): Promise<any>{
+  public async createProduct(product: Product): Promise<NetWorkResponse | NetWorkResponseError>{
     try {
       const data = await this.firestoreService.collection("products").add(product);
-      return data;
+      return { success: true, response: data };
     } catch (error) {
-      return Promise.reject(error);
+      return { success: false, error };
     }
   }
 
@@ -76,6 +76,15 @@ export class ProductService {
         name, description, price, offert, image, brand
       });
       return { success: true, response: product }
+    } catch (error) {
+      return { success: false, error }
+    }
+  }
+
+  public async deleteProduct(product: Product): Promise<NetWorkResponse | NetWorkResponseError> {
+    try {
+      await this.firestoreService.collection('products').doc(product._id).delete();
+      return { success: true, response: null }
     } catch (error) {
       return { success: false, error }
     }

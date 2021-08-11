@@ -22,13 +22,21 @@ import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatTableModule } from '@angular/material/table';
 import { MatDialogModule } from '@angular/material/dialog';
-import { ProductdialogBoxComponent } from './views/product/productdialog-box/productdialog-box.component';
+import { MatSelectModule } from '@angular/material/select/';
+import { LoaderComponent } from './global/components/loader/loader.component';
+import { LottieModule } from 'ngx-lottie';
+import { ProductComponent } from './global/components/product/product.component';
+
+export function playerFactory(){
+  return import('lottie-web');
+}
 
 @NgModule({
   declarations: [
     AppComponent,
     LoginComponent,
-    ProductdialogBoxComponent
+    LoaderComponent,
+    ProductComponent
   ],
   imports: [
     BrowserModule,
@@ -41,10 +49,14 @@ import { ProductdialogBoxComponent } from './views/product/productdialog-box/pro
     MatPaginatorModule,
     MatTableModule,
     MatDialogModule,
+    MatSelectModule,
     FormsModule,
     ReactiveFormsModule,
     BrowserAnimationsModule,
-    AngularFireModule.initializeApp(environment.firebase),
+    LottieModule.forRoot({
+      player: playerFactory
+    }),
+    AngularFireModule.initializeApp(environment.firebase)
   ],
   providers: [],
   bootstrap: [AppComponent]

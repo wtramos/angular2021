@@ -14,6 +14,18 @@ export class AuthService{
 
     }
 
+    public async getCurrentUser(): Promise<any> {
+        try {
+            let data;
+            await this.authService.currentUser.then(value => {
+                data = value?.toJSON() || null;
+            })
+            return data;
+        } catch (error) {
+            Promise.reject(error);
+        }
+    }
+
     public async signIn(email: string, password: string): Promise<NetWorkResponse | NetWorkResponseError> {
         try {
             const response = await this.authService.signInWithEmailAndPassword(email, password);

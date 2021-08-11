@@ -6,7 +6,8 @@ import { MatPaginator } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarHorizontalPosition, MatSnackBarVerticalPosition } from '@angular/material/snack-bar';
-import { ProductdialogBoxComponent } from 'src/app/views/product/productdialog-box/productdialog-box.component';
+import { ProductComponent } from 'src/app/global/components/product/product.component';
+import { LoaderComponent } from 'src/app/global/components/loader/loader.component';
 
 @Component({
   selector: 'app-home',
@@ -53,6 +54,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   //TODO: Agregar registros en el FireBase en la colección de products.
   //TODO: Mostrar la data de la colección products en la página web.
   ngOnInit(): void {
+    this.dialog.open(LoaderComponent);
     this.getProducts();
     this.productObserver = this.productService.getProductsRealTime$().subscribe(
       next => {
@@ -63,12 +65,15 @@ export class HomeComponent implements OnInit, OnDestroy {
             this.brandList.push(product.brand);
           }
         });
+        this.dialog.closeAll();
       },
       error => {
-        console.log(error)
+        this.dialog.closeAll();
+        console.log(error);
       },
       () => {
-        console.log("completed")
+        this.dialog.closeAll();
+        console.log("completed");
       }
     )
   }
@@ -86,31 +91,12 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   create(){
-    const product: Product = {
-      name: "name-prueba",
-      brand: "brand-prueba",
-      description: "description-prueba",
-      image: "",
-      offert: {
-        isOffert: false,
-        type: "",
-        value: 0
-      },
-      price: {
-        amount: 11,
-        currencyType: "USD"
-      }
-    }
-
-    this.productService.createProduct(product).then(res =>{
-      this.getProducts();
-    });
+    this.openDialog('Product Registration', {});
   }
 
   searchByBrand(){
     try {
       this.productService.getProductByBrand(this.product.value).then(productsFiltered => {
-        //console.log({productsFiltered});
         this.products = productsFiltered;
         this.dataSource  = new MatTableDataSource(this.products);
         this.dataSource.paginator = this.paginator;
@@ -131,6 +117,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     //product.name != this.products[i].name
   }
 
+  /*
   update(): void {
     if (this.productDetail.invalid){
       return;
@@ -153,30 +140,64 @@ export class HomeComponent implements OnInit, OnDestroy {
 
     this.productService.updateProduct(this.productSelected!);
   }
+  */
 
   openDialog(action, obj) {
     this.productSelected = obj;
     obj.action = action;
-    const dialogRef = this.dialog.open(ProductdialogBoxComponent, {
+    const dialogRef = this.dialog.open(ProductComponent, {
       width: '400px',
       data: obj
     });
 
     dialogRef.afterClosed().subscribe(result => {
-      if(result.event == 'Product Update'){
+      if (result.event == 'Product Registration') {
+        this.addRowData(result.data);
+      }else if (result.event == 'Product Update') {
         this.updateRowData(result.data);
-      }else if(result.event == 'Delete'){
+      }else if (result.event == 'Product Delete') {
         this.deleteRowData(result.data);
       }
     });
   }
 
+  private async addRowData(row_obj){
+    const newProduct: Product = {
+      name: row_obj.name,
+      brand: row_obj.brand,
+      description: row_obj.description,
+      image: row_obj.image,
+      offert: {
+        isOffert: false,
+        type: "1",
+        value: 0
+      },
+      price: {
+        amount: row_obj.amount,
+        currencyType: row_obj.currencyType
+      }
+    };
+    
+    const response = await this.productService.createProduct(newProduct).then
+    (response => {
+      if (response.success){
+        const mensaje = "Successful recording!";
+        this.openSnackBar(mensaje, "Product Registration", this.codigoMensajeExito);
+        this.getProducts();
+      }}).catch(error => {
+        this.openSnackBar(error.message, "Product Registration", this.codigoMensajeError);
+      }); 
+     return true;
+  }
+
   private async updateRowData(row_obj){
+    this.productSelected!.brand = row_obj.brand;
     this.productSelected!.name = row_obj.name;
     this.productSelected!.description = row_obj.description;
     this.productSelected!.image = row_obj.image;
     this.productSelected!.price.amount = row_obj.amount;
-    //console.log(this.productSelected!);
+    this.productSelected!.price.currencyType = row_obj.currencyType;
+
     const response = await this.productService.updateProduct(this.productSelected!).then(response => {
     if (response.success){
       const mensaje = "Successful recording!";
@@ -187,7 +208,16 @@ export class HomeComponent implements OnInit, OnDestroy {
     return true;
   }
 
-  deleteRowData(row_obj){
+  private async deleteRowData(row_obj){
+    this.productSelected!.name = row_obj.name;
+    const response = await this.productService.deleteProduct(this.productSelected!).then(response => {
+    if (response.success){
+      const mensaje = "Successful removal!";
+      this.openSnackBar(mensaje, "Product Delete", this.codigoMensajeExito);
+      this.getProducts();
+    }}).catch(error => {
+      this.openSnackBar(error.message, "Product Delete", this.codigoMensajeError);
+    });
     return true;
   }
 
@@ -196,11 +226,11 @@ export class HomeComponent implements OnInit, OnDestroy {
       duration: this.duracionSegundos * 1000,
       horizontalPosition: this.posicionHorizontal,
       verticalPosition: this.posicionVertical,
-      panelClass: this.estilo(codigo)
+      panelClass: this.styleMessage(codigo)
     });
   }
 
-  estilo(codigo: number){
+  styleMessage(codigo: number){
     switch(codigo) { 
       case this.codigoMensajeError: return 'estilo-mensaje-error';
       case this.codigoMensajeInformacion: return 'estilo-mensaje-informacion';
